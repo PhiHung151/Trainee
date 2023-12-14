@@ -5,9 +5,10 @@
     "\\Tranning\\Controllers",
     "\\Tranning\\Models",
     "\\Tranning\\Views",
+    "\\Tranning\\Views\\Category",
     "\\Tranning\\Views\\Shared",
     "\\Tranning\\Views\\Tranning"
   ],
-  "SelectedNode": "\\README.md",
+  "SelectedNode": "\\Tranning.sln",
   "PreviewInSolutionExplorer": false
 }

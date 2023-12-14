@@ -22,7 +22,7 @@ namespace Tranning.DataDBContext
         public string email { get; set; }
         [Column("phone", TypeName = "Varchar(20)"), Required]
         public string phone { get; set; }
-        [Column("address", TypeName = "Varchar(100)"), Required]
+        [Column("address", TypeName = "Varchar(100)"), AllowNull]
         public string? address { get; set; }
 
         [Column("avatar", TypeName = "Varchar(100)"), AllowNull]
@@ -30,12 +30,17 @@ namespace Tranning.DataDBContext
 
         [Column("gender", TypeName = "Varchar(50)"), Required]
         public string gender { set; get; }
-        [Column("status", TypeName = "Integer"), Required]
+       
         public int status { get; set; }
         [Column("full_name", TypeName = "Varchar(50)"), Required]
         public string full_name { get; set; }
-        [Column("birthday", TypeName = "DateTime"), Required]
+        [Column("birthday"), AllowNull]
         public DateTime? birthday { get; set; }
+        [Column("last_login"), AllowNull]
+        public DateTime? last_login { get; set; }
+        [Column("last_logout"), AllowNull]
+        public DateTime? last_logout { get; set; }
+
 
         [AllowNull]
         public DateTime? created_at { get; set; }

@@ -13,5 +13,7 @@ namespace Tranning.DataDBContext
         public DbSet<Topic> Topics { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Trainner_Topic> Trainner_Topics { get; set; }
+        public DbSet<Trainee_Course> Trainee_Courses { get; set; }
     }
 }

@@ -373,3 +373,4 @@ F:\ASP-MVC\Tranning\obj\Debug\net7.0\refint\Tranning.dll
 F:\ASP-MVC\Tranning\obj\Debug\net7.0\Tranning.pdb
 F:\ASP-MVC\Tranning\obj\Debug\net7.0\Tranning.genruntimeconfig.cache
 F:\ASP-MVC\Tranning\obj\Debug\net7.0\ref\Tranning.dll
+F:\ASP-MVC\Tranning\obj\Debug\net7.0\Tranning.sourcelink.json

@@ -1,259 +1,185 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.Linq.Expressions;
+﻿
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Tranning.DataDBContext;
 using Tranning.Models;
 
-
 namespace Tranning.Controllers
 {
-    public class TrainerController : Controller
+    public class Trainner_TopicController : Controller
     {
         private readonly TranningDBContext _dbContext;
+        private readonly ILogger<Trainner_TopicController> _logger;
 
-        public TrainerController(TranningDBContext context)
+        public Trainner_TopicController(TranningDBContext context, ILogger<Trainner_TopicController> logger)
         {
             _dbContext = context;
+            _logger = logger;
         }
 
         [HttpGet]
-        public IActionResult Index(string SearchString)
+        public IActionResult Index(string searchString)
         {
-            UserModel userModel = new UserModel();
-            userModel.UserDetailLists = new List<UserDetail>();
-
-            var data = from m in _dbContext.Users select m;
-
-            data = data.Where(m => m.deleted_at == null);
-
-            if (!string.IsNullOrEmpty(SearchString))
+            Trainner_TopicModel trainner_topicModel = new Trainner_TopicModel
             {
-                data = data.Where(m => m.username.Contains(SearchString) || m.full_name.Contains(SearchString));
-            }
+                Trainner_TopicDetailLists = new List<Trainner_TopicDetail>(),
+            };
 
-            // Assign the result of ToList back to the data variable
-            data.ToList();
-
-            foreach (var item in data)
+            try
             {
-                userModel.UserDetailLists.Add(new UserDetail
-                {
-                    id = item.id,
-                    role_id = item.role_id,
-                    username = item.username,
-                    password = item.password,
-                    email = item.email,
-                    phone = item.phone,
-                    address = item.address,
-                    gender = item.gender,
-                    birthday = item.birthday,
-                    full_name = item.full_name,
-                    avatar = item.avatar,
-                    status = item.status,
-                    created_at = item.created_at,
-                    updated_at = item.updated_at
-                });
-            }
+                var data = from m in _dbContext.Trainner_Topics
+                           select m;
 
-            ViewData["CurrentFilter"] = SearchString;
-            return View(userModel);
+                // Your existing code for filtering and populating the model
+                // ...
+
+                return View(trainner_topicModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving Trainer Topics.");
+                return View(trainner_topicModel); // Handle the error appropriately in your view
+            }
         }
-
-
 
         [HttpGet]
         public IActionResult Add()
         {
-            ViewBag.Stores = UserForDropdown;
-
-            // Create an instance of UserDetail here if needed
-            UserDetail user = new UserDetail();
-
-            return View(user);
-        }
-
-        private List<SelectListItem> UserForDropdown
-        {
-            get
+            try
             {
-                var trainee = _dbContext.Roles
-                    .Where(c => c.deleted_at == null)
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.id.ToString(),
-                        Text = c.name,  // Assuming username is the property you want to display
-                    })
+                var trainnerList = _dbContext.Users
+                    .Where(u => u.deleted_at == null && u.role_id == 3)
+                    .Select(u => new SelectListItem { Value = u.id.ToString(), Text = u.full_name })
                     .ToList();
 
-                return trainee;
+                var topicList = _dbContext.Topics
+                    .Where(m => m.deleted_at == null)
+                    .Select(m => new SelectListItem { Value = m.id.ToString(), Text = m.name })
+                    .ToList();
+
+                ViewBag.Users = trainnerList;  // Corrected ViewBag name
+                ViewBag.Topics = topicList;
+
+                Trainner_TopicDetail trainner_topic = new Trainner_TopicDetail();
+                return View(trainner_topic);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving data for Trainer Topic form.");
+                // Handle the error appropriately, maybe redirect to an error page
+                return RedirectToAction("Error", "Home");
             }
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Add(UserDetail user, IFormFile Photo)
+        public IActionResult Add(Trainner_TopicDetail trainner_topic)
         {
-
-            if (ModelState.IsValid)
+            try
             {
-                try
+                if (ModelState.IsValid && trainner_topic != null)
                 {
-                    string uniqueFileName = UploadFile(Photo);
-                    var userData = new User()
+                    var trainner_topicData = new Trainner_Topic()
                     {
-                        username = user.username,
-
-                        role_id = user.role_id,
-                        password = user.password,
-                        email = user.email,
-                        phone = user.phone,
-                        address = user.address,
-                        gender = user.gender,
-                        birthday = user.birthday,
-                        avatar = uniqueFileName,
-                        full_name = user.full_name,
-
-                        status = user.status,
-
+                        trainner_id = trainner_topic.trainner_id,
+                        topic_id = trainner_topic.topic_id,
                         created_at = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
                     };
 
-                    _dbContext.Users.Add(userData);
+                    _dbContext.Trainner_Topics.Add(trainner_topicData);
                     _dbContext.SaveChanges(true);
                     TempData["saveStatus"] = true;
+
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (Exception ex)
+                else // Log model state errors
                 {
-                    TempData["saveStatus"] = false;
-                }
-                return RedirectToAction(nameof(TrainerController.Index), "Trainer");
-
-            }
-
-            var trainee = UserForDropdown;
-
-            ViewBag.Stores = trainee;
-            return View(user);
-        }
-
-        private string UploadFile(IFormFile file)
-        {
-            string uniqueFileName;
-            try
-            {
-                string pathUploadServer = "wwwroot\\uploads\\images";
-
-                string fileName = file.FileName;
-                fileName = Path.GetFileName(fileName);
-                string uniqueStr = Guid.NewGuid().ToString(); // random tao ra cac ky tu khong trung lap
-                // tao ra ten fil ko trung nhau
-                fileName = uniqueStr + "-" + fileName;
-                string uploadPath = Path.Combine(Directory.GetCurrentDirectory(), pathUploadServer, fileName);
-                var stream = new FileStream(uploadPath, FileMode.Create);
-                file.CopyToAsync(stream);
-                // lay lai ten anh de luu database sau nay
-                uniqueFileName = fileName;
-            }
-            catch (Exception ex)
-            {
-                uniqueFileName = ex.Message.ToString();
-            }
-            return uniqueFileName;
-        }
-        [HttpGet]
-        public IActionResult Update(int id = 0)
-        {
-            ViewBag.Stores = UserForDropdown;
-            UserDetail user = new UserDetail();
-            var data = _dbContext.Users.Where(m => m.id == id).FirstOrDefault();
-            if (data != null)
-            {
-                user.id = data.id;
-                user.username = data.username;
-                user.role_id = data.role_id;
-                user.password = data.password;
-                user.email = data.email;
-                user.phone = data.phone;
-                user.full_name = data.full_name;
-
-                user.avatar = data.avatar;
-                user.status = data.status;
-            }
-
-            return View(user);
-        }
-
-        [HttpPost]
-        public IActionResult Update(UserDetail user, IFormFile file)
-        {
-            try
-            {
-                ViewBag.Stores = UserForDropdown;
-                var data = _dbContext.Users.Where(m => m.id == user.id).FirstOrDefault();
-                string uniqueIconAvatar = "";
-                if (user.Photo != null)
-                {
-                    uniqueIconAvatar = uniqueIconAvatar = UploadFile(user.Photo);
-                }
-
-                if (data != null)
-                {
-                    // gan lai du lieu trong db bang du lieu tu form model gui len
-                    data.username = user.username;
-
-                    data.role_id = user.role_id;
-                    data.password = user.password;
-                    data.email = user.email;
-                    data.phone = user.phone;
-                    data.status = user.status;
-                    data.full_name = user.full_name;
-
-                    if (!string.IsNullOrEmpty(uniqueIconAvatar))
+                    foreach (var modelStateKey in ModelState.Keys)
                     {
-                        data.avatar = uniqueIconAvatar;
+                        var errors = ModelState[modelStateKey].Errors;
+                        foreach (var error in errors)
+                        {
+                            _logger.LogError($"Model state error in key {modelStateKey}: {error.ErrorMessage}");
+                        }
                     }
-                    _dbContext.SaveChanges(true);
-                    TempData["UpdateStatus"] = true;
                 }
-                else
-                {
-                    TempData["UpdateStatus"] = false;
-                }
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle database-related exceptions
+                // ...
             }
             catch (Exception ex)
             {
-                TempData["UpdateStatus"] = false;
+                // Handle other exceptions
+                // ...
             }
 
-            return RedirectToAction(nameof(TrainerController.Index), "Trainer");
+            // Populate dropdown lists in case of failure
+            var trainner_topicList = _dbContext.Topics
+                .Where(m => m.deleted_at == null)
+                .Select(m => new SelectListItem { Value = m.id.ToString(), Text = m.name })
+                .ToList();
 
+            var userList = _dbContext.Users
+                .Where(u => u.deleted_at == null && u.role_id == 3)
+                .Select(u => new SelectListItem { Value = u.id.ToString(), Text = u.full_name })
+                .ToList();
 
+            ViewBag.Topics = trainner_topicList;  // Corrected ViewBag name
+            ViewBag.Users = userList;
+
+            return View(trainner_topic);
         }
+
+
+        // Add other actions as needed...
+
+        // Example Delete action
         [HttpGet]
-        public IActionResult Delete(int id = 0)
+        public IActionResult Delete(int id)
         {
-            try
+            var trainner_topicData = _dbContext.Trainner_Topics.Find(id);
+
+            if (trainner_topicData == null)
             {
-                var data = _dbContext.Users.Where(m => m.id == id).FirstOrDefault();
-                if (data != null)
-                {
-                    data.deleted_at = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    _dbContext.SaveChanges(true);
-                    TempData["DeleteStatus"] = true;
-                }
-                else
-                {
-                    TempData["DeleteStatus"] = false;
-                }
+                return NotFound();
             }
-            catch
+
+            var trainner_topic = new Trainner_TopicDetail
             {
-                TempData["DeleteStatus"] = false;
+                trainner_id = trainner_topicData.trainner_id,
+                topic_id = trainner_topicData.topic_id,
+                // Map other properties as needed
+            };
+
+            return View(trainner_topic);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var trainner_topicData = await _dbContext.Trainner_Topics.FindAsync(id);
+
+            if (trainner_topicData == null)
+            {
+                return NotFound();
             }
-            return RedirectToAction(nameof(TrainerController.Index), "Trainer");
+
+            _dbContext.Trainner_Topics.Remove(trainner_topicData);
+            await _dbContext.SaveChangesAsync();
+
+            TempData["deleteStatus"] = true;
+
+            return RedirectToAction(nameof(Index));
         }
     }
-
 }

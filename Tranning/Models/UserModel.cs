@@ -30,6 +30,10 @@ namespace Tranning.Models
 
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
         public DateTime? birthday { get; set; }
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
+        public DateTime? last_login { get; set; }
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
+        public DateTime? last_logout { get; set; }
         [Required(ErrorMessage = "Enter full name, please")]
         public string full_name { get; set; }
         public string? avatar { get; set; }

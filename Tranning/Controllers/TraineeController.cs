@@ -1,262 +1,165 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Tranning.DataDBContext;
 using Tranning.Models;
 
-
 namespace Tranning.Controllers
 {
-    public class TraineeController : Controller
+    public class Trainee_courseController : Controller
     {
         private readonly TranningDBContext _dbContext;
+        private readonly ILogger<Trainee_courseController> _logger;
 
-        public TraineeController(TranningDBContext context)
+        public Trainee_courseController(TranningDBContext context, ILogger<Trainee_courseController> logger)
         {
             _dbContext = context;
+            _logger = logger;
         }
 
         [HttpGet]
-        public IActionResult Index(string SearchString)
+        public IActionResult Index(string searchString)
         {
-            UserModel userModel = new UserModel();
-            userModel.UserDetailLists = new List<UserDetail>();
-
-            var data = from m in _dbContext.Users select m;
-
-            data = data.Where(m => m.deleted_at == null);
-
-            if (string.IsNullOrEmpty(SearchString))
+            Trainee_courseModel trainee_courseModel = new Trainee_courseModel
             {
-                data = data.Where(m => m.username.Contains(SearchString) || m.full_name.Contains(SearchString));
-            }
+                Trainee_CourseDetailLists = new List<Trainee_courseDetail>(),
+            };
 
-            // Assign the result of ToList back to the data variable
-            data.ToList();
-
-            foreach (var item in data)
+            try
             {
-                userModel.UserDetailLists.Add(new UserDetail
-                {
-                    id = item.id,
-                    role_id = item.role_id,
-                    username = item.username,
-                    password = item.password,
-                    email = item.email,
-                    phone = item.phone,
-                    address = item.address,
-                    gender = item.gender,
-                    birthday = item.birthday,
-                    full_name = item.full_name,
-                    avatar = item.avatar,
-                    status = item.status,
-                    created_at = item.created_at,
-                    updated_at = item.updated_at
-                });
-            }
+                var data = from m in _dbContext.Trainee_Courses
+                           select m;
 
-            ViewData["CurrentFilter"] = SearchString;
-            return View(userModel);
+                // Your existing code for filtering and populating the model
+                // ...
+
+                return View(trainee_courseModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving Trainee Courses.");
+                return View(trainee_courseModel); // Handle the error appropriately in your view
+            }
         }
-
-
 
         [HttpGet]
         public IActionResult Add()
         {
-            ViewBag.Stores = UserForDropdown;
-
-            // Create an instance of UserDetail here if needed
-            UserDetail user = new UserDetail();
-
-            return View(user);
-        }
-
-        private List<SelectListItem> UserForDropdown
-        {
-            get
+            try
             {
-                var trainee = _dbContext.Roles
-                    .Where(c => c.deleted_at == null)
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.id.ToString(),
-                        Text = c.name,  // Assuming username is the property you want to display
-                    })
+                var traineeList = _dbContext.Users
+                    .Where(u => u.deleted_at == null && u.role_id == 3)
+                    .Select(u => new SelectListItem { Value = u.id.ToString(), Text = u.full_name })
                     .ToList();
 
-                return trainee;
+                var courseList = _dbContext.Courses
+                    .Where(m => m.deleted_at == null)
+                    .Select(m => new SelectListItem { Value = m.id.ToString(), Text = m.name })
+                    .ToList();
+
+                ViewBag.Users = traineeList;  // Corrected ViewBag name
+                ViewBag.Courses = courseList;
+
+                Trainee_courseDetail trainee_course = new Trainee_courseDetail();
+                return View(trainee_course);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving data for Trainee Course form.");
+                // Handle the error appropriately, maybe redirect to an error page
+                return RedirectToAction("Error", "Home");
             }
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Add(UserDetail user, IFormFile Photo)
+        public IActionResult Add(Trainee_courseDetail trainee_course)
         {
-
-            if (ModelState.IsValid)
+            try
             {
-                try
+                if (ModelState.IsValid && trainee_course != null)
                 {
-                    string uniqueFileName = UploadFile(Photo);
-                    var userData = new User()
+                    var trainee_courseData = new Trainee_Course()
                     {
-                        username = user.username,
-
-                        role_id = user.role_id,
-                        password = user.password,
-                        email = user.email,
-                        phone = user.phone,
-                        address = user.address,
-                        gender = user.gender,
-                        birthday = user.birthday,
-                        avatar = uniqueFileName,
-                        full_name = user.full_name,
-
-                        status = user.status,
-
+                        trainee_id = trainee_course.trainee_id,
+                        course_id = trainee_course.course_id,
                         created_at = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
                     };
 
-                    _dbContext.Users.Add(userData);
+                    _dbContext.Trainee_Courses.Add(trainee_courseData);
                     _dbContext.SaveChanges(true);
                     TempData["saveStatus"] = true;
-                }
-                catch (Exception ex)
-                {
-                    TempData["saveStatus"] = false;
-                }
-                return RedirectToAction(nameof(TraineeController.Index), "Trainee");
 
-            }
-
-            var trainee = UserForDropdown;
-
-            ViewBag.Stores = trainee;
-            return View(user);
-        }
-
-        private string UploadFile(IFormFile file)
-        {
-            string uniqueFileName;
-            try
-            {
-                string pathUploadServer = "wwwroot\\uploads\\images";
-
-                string fileName = file.FileName;
-                fileName = Path.GetFileName(fileName);
-                string uniqueStr = Guid.NewGuid().ToString(); // random tao ra cac ky tu khong trung lap
-                // tao ra ten fil ko trung nhau
-                fileName = uniqueStr + "-" + fileName;
-                string uploadPath = Path.Combine(Directory.GetCurrentDirectory(), pathUploadServer, fileName);
-                var stream = new FileStream(uploadPath, FileMode.Create);
-                file.CopyToAsync(stream);
-                // lay lai ten anh de luu database sau nay
-                uniqueFileName = fileName;
-            }
-            catch (Exception ex)
-            {
-                uniqueFileName = ex.Message.ToString();
-            }
-            return uniqueFileName;
-        }
-        [HttpGet]
-        public IActionResult Update(int id = 0)
-        {
-            ViewBag.Stores = UserForDropdown;
-
-            // Create an instance of UserDetail here if needed
-
-            UserDetail user = new UserDetail();
-            var data = _dbContext.Users.Where(m => m.id == id).FirstOrDefault();
-            if (data != null)
-            {
-                user.id = data.id;
-                user.username = data.username;
-                user.role_id = data.role_id;
-                user.password = data.password;
-                user.email = data.email;
-                user.phone = data.phone;
-                user.full_name = data.full_name;
-
-                user.avatar = data.avatar;
-                user.status = data.status;
-            }
-
-            return View(user);
-        }
-
-        [HttpPost]
-        public IActionResult Update(UserDetail user, IFormFile file)
-        {
-            try
-            {
-
-                var data = _dbContext.Users.Where(m => m.id == user.id).FirstOrDefault();
-                string uniqueIconAvatar = "";
-                if (user.Photo != null)
-                {
-                    uniqueIconAvatar = uniqueIconAvatar = UploadFile(user.Photo);
-                }
-
-                if (data != null)
-                {
-                    // gan lai du lieu trong db bang du lieu tu form model gui len
-                    data.username = user.username;
-
-                    data.role_id = user.role_id;
-                    data.password = user.password;
-                    data.email = user.email;
-                    data.phone = user.phone;
-                    data.status = user.status;
-                    data.full_name = user.full_name;
-
-                    if (!string.IsNullOrEmpty(uniqueIconAvatar))
-                    {
-                        data.avatar = uniqueIconAvatar;
-                    }
-                    _dbContext.SaveChanges(true);
-                    TempData["UpdateStatus"] = true;
-                }
-                else
-                {
-                    TempData["UpdateStatus"] = false;
+                    return RedirectToAction(nameof(Index));
                 }
             }
             catch (Exception ex)
             {
-                TempData["UpdateStatus"] = false;
+                _logger.LogError(ex, "An error occurred while adding Trainee Course.");
+                TempData["saveStatus"] = false;
+                TempData["errorMessage"] = ex.Message; // Add this line to display the error message
             }
 
-            return RedirectToAction(nameof(TraineeController.Index), "Trainee");
+            var courseList = _dbContext.Courses
+                .Where(m => m.deleted_at == null)
+                .Select(m => new SelectListItem { Value = m.id.ToString(), Text = m.name })
+                .ToList();
 
+            var userList = _dbContext.Users
+                .Where(u => u.deleted_at == null && u.role_id == 3)
+                .Select(u => new SelectListItem { Value = u.id.ToString(), Text = u.full_name })
+                .ToList();
 
+            ViewBag.Courses = courseList;
+            ViewBag.Users = userList;
+
+            return View(trainee_course);
         }
+
+        // Add other actions as needed...
+
+        // Example Delete action
         [HttpGet]
-        public IActionResult Delete(int id = 0)
+        public IActionResult Delete(int id)
         {
-            try
+            var trainee_courseData = _dbContext.Trainee_Courses.Find(id);
+
+            if (trainee_courseData == null)
             {
-                var data = _dbContext.Users.Where(m => m.id == id).FirstOrDefault();
-                if (data != null)
-                {
-                    data.deleted_at = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    _dbContext.SaveChanges(true);
-                    TempData["DeleteStatus"] = true;
-                }
-                else
-                {
-                    TempData["DeleteStatus"] = false;
-                }
+                return NotFound();
             }
-            catch
+
+            var trainee_course = new Trainee_courseDetail
             {
-                TempData["DeleteStatus"] = false;
+                trainee_id = trainee_courseData.trainee_id,
+                course_id = trainee_courseData.course_id,
+                // Map other properties as needed
+            };
+
+            return View(trainee_course);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var trainee_courseData = await _dbContext.Trainee_Courses.FindAsync(id);
+
+            if (trainee_courseData == null)
+            {
+                return NotFound();
             }
-            return RedirectToAction(nameof(TraineeController.Index), "Trainee");
+
+            _dbContext.Trainee_Courses.Remove(trainee_courseData);
+            await _dbContext.SaveChangesAsync();
+
+            TempData["deleteStatus"] = true;
+
+            return RedirectToAction(nameof(Index));
         }
     }
-
 }

@@ -23,10 +23,10 @@ namespace Tranning.Controllers
             UserModel userModel = new UserModel();
             userModel.UserDetailLists = new List<UserDetail>();
 
-            var data = from m in _dbContext.Users select m;
-
+            var data = from m in _dbContext.Users select m; //luon null
             data = data.Where(m => m.deleted_at == null);
-            if (string.IsNullOrEmpty(SearchString))
+            
+            if (!string.IsNullOrEmpty(SearchString))
             {
                 data = data.Where(m => m.username.Contains(SearchString) || m.full_name.Contains(SearchString));
             }
@@ -116,9 +116,7 @@ namespace Tranning.Controllers
                         birthday = user.birthday,
                         avatar = uniqueFileName,
                         full_name = user.full_name,
-
                         status = user.status,
-
                         created_at = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
                     };
 
