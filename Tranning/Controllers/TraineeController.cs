@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -24,20 +26,22 @@ namespace Tranning.Controllers
         [HttpGet]
         public IActionResult Index(string searchString)
         {
-            Trainee_courseModel trainee_courseModel = new Trainee_courseModel
+            Trainee_CourseModel trainee_courseModel = new Trainee_CourseModel
             {
                 Trainee_CourseDetailLists = new List<Trainee_courseDetail>(),
             };
 
             try
             {
-                var data = from m in _dbContext.Trainee_Courses
+                var data = from m in _dbContext.Trainee_Course
                            select m;
+
 
                 // Your existing code for filtering and populating the model
                 // ...
-
-                return View(trainee_courseModel);
+                ViewBag.trainer = _dbContext.Trainee_Course.ToList();
+                
+               return View();
             }
             catch (Exception ex)
             {
@@ -89,10 +93,9 @@ namespace Tranning.Controllers
                         course_id = trainee_course.course_id,
                         created_at = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
                     };
-
-                    _dbContext.Trainee_Courses.Add(trainee_courseData);
+                    _dbContext.Trainee_Course.Add(trainee_courseData);
                     _dbContext.SaveChanges(true);
-                    TempData["saveStatus"] = true;
+ 
 
                     return RedirectToAction(nameof(Index));
                 }
@@ -126,7 +129,7 @@ namespace Tranning.Controllers
         [HttpGet]
         public IActionResult Delete(int id)
         {
-            var trainee_courseData = _dbContext.Trainee_Courses.Find(id);
+            var trainee_courseData = _dbContext.Trainee_Course.Find(id);
 
             if (trainee_courseData == null)
             {
@@ -147,14 +150,14 @@ namespace Tranning.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var trainee_courseData = await _dbContext.Trainee_Courses.FindAsync(id);
+            var trainee_courseData = await _dbContext.Trainee_Course.FindAsync(id);
 
             if (trainee_courseData == null)
             {
                 return NotFound();
             }
 
-            _dbContext.Trainee_Courses.Remove(trainee_courseData);
+            _dbContext.Trainee_Course.Remove(trainee_courseData);
             await _dbContext.SaveChangesAsync();
 
             TempData["deleteStatus"] = true;

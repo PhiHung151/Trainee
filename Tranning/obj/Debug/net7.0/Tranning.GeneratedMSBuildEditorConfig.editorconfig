@@ -122,16 +122,36 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5lZV9Db3Vyc2VcVXBkYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[F:/ASP-MVC/Tranning/Views/Trainer_Topic/Add.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5lcl9Ub3BpY1xBZGQuY3NodG1s
+[F:/ASP-MVC/Tranning/Views/TrainerTopic/Add.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5lclRvcGljXEFkZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[F:/ASP-MVC/Tranning/Views/Trainer_Topic/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5lcl9Ub3BpY1xJbmRleC5jc2h0bWw=
+[F:/ASP-MVC/Tranning/Views/TrainerTopic/AddTopic.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5lclRvcGljXEFkZFRvcGljLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[F:/ASP-MVC/Tranning/Views/Trainer_Topic/Update.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5lcl9Ub3BpY1xVcGRhdGUuY3NodG1s
+[F:/ASP-MVC/Tranning/Views/TrainerTopic/IndexTopic.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5lclRvcGljXEluZGV4VG9waWMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[F:/ASP-MVC/Tranning/Views/TrainerTopic/Update.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5lclRvcGljXFVwZGF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[F:/ASP-MVC/Tranning/Views/Trainner_Topic/Add.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5uZXJfVG9waWNcQWRkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[F:/ASP-MVC/Tranning/Views/Trainner_Topic/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5uZXJfVG9waWNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[F:/ASP-MVC/Tranning/Views/Trainner_Topic/test.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5uZXJfVG9waWNcdGVzdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[F:/ASP-MVC/Tranning/Views/Trainner_Topic/Update.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhaW5uZXJfVG9waWNcVXBkYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [F:/ASP-MVC/Tranning/Views/Tranning/Add.cshtml]
